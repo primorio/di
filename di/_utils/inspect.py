@@ -38,6 +38,13 @@ def is_coroutine_callable(call: Any) -> bool:
 
 
 def is_async_gen_callable(call: Callable[..., Any]) -> bool:
+    # To support our use case scheme, where we have __init__ which should be solved
+    # and __call__ which should be basically ignored when solving, this fix is needed.
+    # We have the problem that a class with a __call__ that returns an async generator
+    # was treated as an async gen callable here, so we check just like for in is_coroutine_callable
+    # I'm not sure, but this probably breaks async context managers or something at least...
+    if inspect.isclass(call):
+        return False
     unwrapped_call = unwrap_callable(call)
     if inspect.isasyncgenfunction(unwrapped_call):
         return True
